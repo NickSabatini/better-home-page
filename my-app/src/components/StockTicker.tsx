@@ -19,6 +19,7 @@ export default function StockTicker() {
   const defaultSymbols = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA'];
 
   const fetchStockData = async () => {
+    console.log("inside fetchStockData");
     try {
       const response = await fetch(`/api/stocks?symbols=${defaultSymbols.join(',')}`);
       if (!response.ok) {

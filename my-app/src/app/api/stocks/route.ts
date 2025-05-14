@@ -1,17 +1,5 @@
 import { NextResponse } from 'next/server';
 
-interface PolygonStockData {
-  ticker: string;
-  prevDay: {
-    c: number;  // close price
-    o: number;  // open price
-    h: number;  // high
-    l: number;  // low
-    v: number;  // volume
-    t: number;  // timestamp
-  };
-}
-
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const symbols = searchParams.get('symbols')?.split(',') || [];
@@ -30,7 +18,7 @@ export async function GET(request: Request) {
     const stockPromises = symbols.map(async (symbol) => {
       const response = await fetch(
         `https://api.polygon.io/v2/aggs/ticker/${symbol}/prev?adjusted=true&apiKey=${apiKey}`,
-        { next: { revalidate: 120 } } // Cache for 2 minutes
+        { next: { revalidate: 60 } } // Cache for 1 minute
       );
 
       if (!response.ok) {
