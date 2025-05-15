@@ -13,6 +13,7 @@ export async function GET(request: Request) {
       `https://your-news-api-endpoint?categories=${categories.join(',')}&apikey=${apiKey}`
     );
     
+    
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
