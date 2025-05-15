@@ -91,9 +91,24 @@ export default function NewsFeed() {
 
       <div className={styles.articleGrid}>
         {loading ? (
-          <div className={styles.loading}>
-            <div className={styles.loadingSpinner}></div>
-          </div>
+          <>
+            {[...Array(6)].map((_, index) => (
+              <article key={`placeholder-${index}`} className={styles.articleCard}>
+                <div className={styles.articleContent}>
+                  <div className={styles.thumbnailContainer}>
+                    <div className={styles.placeholderThumbnail} />
+                  </div>
+                  <div className={styles.articleText}>
+                    <div className={styles.placeholderTitle} />
+                    <div className={styles.placeholderDescription} />
+                    <div className={styles.articleMeta}>
+                      <div className={styles.placeholderMeta} />
+                    </div>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </>
         ) : (
           articles.map((article, index) => (
             <article key={index} className={styles.articleCard}>
