@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import styles from './NewsFeed.module.css';
 
@@ -36,6 +36,12 @@ export default function NewsFeed() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const handleCategoryClick = useCallback((e: React.MouseEvent<HTMLButtonElement>, categoryId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCategory(categoryId);
+  }, []);
+
   const fetchNews = async (selectedCategory: string) => {
     try {
       setLoading(true);
@@ -54,7 +60,6 @@ export default function NewsFeed() {
 
   useEffect(() => {
     fetchNews(category);
-    // Refresh news every hour
     const interval = setInterval(() => fetchNews(category), 3600000);
     return () => clearInterval(interval);
   }, [category]);
@@ -65,10 +70,8 @@ export default function NewsFeed() {
         {categories.map((cat) => (
           <button
             key={cat.id}
-            onClick={(e) => {
-              e.preventDefault();
-              setCategory(cat.id);
-            }}
+            type="button"
+            onClick={(e) => handleCategoryClick(e, cat.id)}
             className={`${styles.categoryButton} ${
               category === cat.id
                 ? styles.categoryButtonActive
@@ -80,21 +83,19 @@ export default function NewsFeed() {
         ))}
       </div>
 
-      {loading && (
-        <div className={styles.loading}>
-          <div className={styles.loadingSpinner}></div>
-        </div>
-      )}
-
       {error && (
         <div className={styles.error}>
           {error}
         </div>
       )}
 
-      {!loading && !error && (
-        <div className={styles.articleGrid}>
-          {articles.map((article, index) => (
+      <div className={styles.articleGrid}>
+        {loading ? (
+          <div className={styles.loading}>
+            <div className={styles.loadingSpinner}></div>
+          </div>
+        ) : (
+          articles.map((article, index) => (
             <article key={index} className={styles.articleCard}>
               <div className={styles.articleContent}>
                 {article.urlToImage && (
@@ -129,9 +130,9 @@ export default function NewsFeed() {
                 </div>
               </div>
             </article>
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
     </div>
   );
 } 
