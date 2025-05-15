@@ -2,17 +2,29 @@ import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const categories = searchParams.get('categories')?.split(',') || [];
+  const category = searchParams.get('category') || 'general';
+  const pageSize = searchParams.get('pageSize') || '10';
   
   try {
-    // The API key will only be used server-side
     const apiKey = process.env.NEWS_API_KEY;
-    
-    // Example implementation (you'll need to adjust based on your chosen news API)
+    if (!apiKey) {
+      throw new Error('NEWS_API_KEY is not configured');
+    }
+
     const response = await fetch(
-      `https://your-news-api-endpoint?categories=${categories.join(',')}&apikey=${apiKey}`
+      `https://newsapi.org/v2/top-headlines?country=us&category=${category}&pageSize=${pageSize}&apiKey=${apiKey}`,
+      {
+        headers: {
+          'X-Api-Key': apiKey,
+        },
+        next: { revalidate: 3600 }, // Cache for 1 hour
+      }
     );
     
+    if (!response.ok) {
+      throw new Error(`NewsAPI responded with status: ${response.status}`);
+    }
+
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
