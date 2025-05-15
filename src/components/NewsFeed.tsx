@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import styles from './NewsFeed.module.css';
 
@@ -36,12 +36,6 @@ export default function NewsFeed() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const handleCategoryClick = useCallback((e: React.MouseEvent<HTMLButtonElement>, categoryId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setCategory(categoryId);
-  }, []);
-
   const fetchNews = async (selectedCategory: string) => {
     try {
       setLoading(true);
@@ -71,8 +65,10 @@ export default function NewsFeed() {
         {categories.map((cat) => (
           <button
             key={cat.id}
-            type="button"
-            onClick={(e) => handleCategoryClick(e, cat.id)}
+            onClick={(e) => {
+              e.preventDefault();
+              setCategory(cat.id);
+            }}
             className={`${styles.categoryButton} ${
               category === cat.id
                 ? styles.categoryButtonActive
