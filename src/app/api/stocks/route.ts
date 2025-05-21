@@ -9,15 +9,15 @@ export async function GET(request: Request) {
   }
 
   try {
-    const apiKey = process.env.POLYGON_API_KEY;
+    const apiKey = process.env.FINNHUB_API_KEY;
     if (!apiKey) {
-      throw new Error('Polygon API key not configured');
+      throw new Error('Finnhub API key not configured');
     }
 
     // Fetch data for each symbol in parallel
     const stockPromises = symbols.map(async (symbol) => {
       const response = await fetch(
-        `https://api.polygon.io/v2/aggs/ticker/${symbol}/prev?adjusted=true&apiKey=${apiKey}`,
+        `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${apiKey}`,
         { next: { revalidate: 60 } } // Cache for 1 minute
       );
 
@@ -27,18 +27,15 @@ export async function GET(request: Request) {
 
       const data = await response.json();
       
-      // Polygon returns an array of results, we want the most recent
-      const latestData = data.results[0];
-      
-      // Calculate the previous day's change
-      const prevClose = latestData.c;
-      const open = latestData.o;
-      const change = prevClose - open;
-      const changePercent = (change / open) * 100;
+      // Finnhub returns current price, previous close, and change
+      const currentPrice = data.c;
+      const previousClose = data.pc;
+      const change = currentPrice - previousClose;
+      const changePercent = (change / previousClose) * 100;
 
       return {
         symbol,
-        price: prevClose,
+        price: currentPrice,
         change,
         changePercent
       };
