@@ -11,7 +11,9 @@ interface StockData {
   changePercent: number;
 }
 
-const isValidStockData = (stock: any): stock is StockData => {
+type PartialStockData = Partial<Record<keyof StockData, unknown>>;
+
+const isValidStockData = (stock: PartialStockData): stock is StockData => {
   return (
     typeof stock === 'object' &&
     stock !== null &&
