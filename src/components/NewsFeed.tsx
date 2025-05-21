@@ -30,10 +30,14 @@ const categories = [
   { id: 'health', label: 'Health' },
 ];
 
+const ARTICLES_PER_PAGE = 10;
+const PAGE_RELOAD_MS = 100;
+
 export default function NewsFeed() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [category, setCategory] = useState('general');
   const [loading, setLoading] = useState(true);
+  const [showLoading, setShowLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const handleCategoryClick = useCallback((e: React.MouseEvent<HTMLButtonElement>, categoryId: string) => {
@@ -43,18 +47,32 @@ export default function NewsFeed() {
   }, []);
 
   const fetchNews = async (selectedCategory: string) => {
+    const startTime = Date.now();
     try {
       setLoading(true);
+      setShowLoading(true);
       setError(null);
-      const response = await fetch(`/api/news?category=${selectedCategory}`);
+      const response = await fetch(`/api/news?category=${selectedCategory}&pageSize=${ARTICLES_PER_PAGE}`);
       if (!response.ok) throw new Error('Failed to fetch news');
       const data: NewsResponse = await response.json();
+      
+      // Calculate how long the fetch took
+      const fetchTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, PAGE_RELOAD_MS - fetchTime);
+      
+      // Wait for the remaining time if fetch was faster than 250ms
+      if (remainingTime > 0) {
+        await new Promise(resolve => setTimeout(resolve, remainingTime));
+      }
+      
       setArticles(data.articles);
     } catch (err) {
       setError('Failed to load news articles');
       console.error(err);
     } finally {
       setLoading(false);
+      // Add a small delay before hiding the loading state to prevent flicker
+      setTimeout(() => setShowLoading(false), 50);
     }
   };
 
@@ -90,9 +108,9 @@ export default function NewsFeed() {
       )}
 
       <div className={styles.articleGrid}>
-        {loading ? (
+        {showLoading ? (
           <>
-            {[...Array(6)].map((_, index) => (
+            {[...Array(ARTICLES_PER_PAGE)].map((_, index) => (
               <article key={`placeholder-${index}`} className={styles.articleCard}>
                 <div className={styles.articleContent}>
                   <div className={styles.thumbnailContainer}>
