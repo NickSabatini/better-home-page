@@ -11,7 +11,7 @@ export default function Home() {
           <h2>Settings</h2>
           {/* Stock Ticker Settings */}
           <section className={styles.settingsSection}>
-            <h3>Stock Tickers</h3>
+            {/* <h3>Stock Tickers</h3> */}
             <div className={styles.tickerList}>
               {/* Ticker list will go here */}
               <p className={styles.comingSoon}>Custom ticker selection coming soon!</p>

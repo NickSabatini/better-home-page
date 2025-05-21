@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import styles from './StockTicker.module.css';
+import StockTickerInput from './StockTickerInput';
 
 interface StockData {
   symbol: string;
@@ -10,23 +11,36 @@ interface StockData {
   changePercent: number;
 }
 
+const isValidStockData = (stock: any): stock is StockData => {
+  return (
+    typeof stock === 'object' &&
+    stock !== null &&
+    typeof stock.symbol === 'string' &&
+    typeof stock.price === 'number' &&
+    !isNaN(stock.price) &&
+    typeof stock.change === 'number' &&
+    !isNaN(stock.change) &&
+    typeof stock.changePercent === 'number' &&
+    !isNaN(stock.changePercent)
+  );
+};
+
 export default function StockTicker() {
   const [stocks, setStocks] = useState<StockData[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Default symbols - in a real app, these would come from user settings
-  const defaultSymbols = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA'];
+  const [selectedTickers, setSelectedTickers] = useState<string[]>(['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA']);
 
   const fetchStockData = async () => {
-    console.log("inside fetchStockData");
     try {
-      const response = await fetch(`/api/stocks?symbols=${defaultSymbols.join(',')}`);
+      const response = await fetch(`/api/stocks?symbols=${selectedTickers.join(',')}`);
       if (!response.ok) {
         throw new Error('Failed to fetch stock data');
       }
       const data = await response.json();
-      setStocks(data);
+      // Filter out any invalid stock data
+      const validStocks = data.filter(isValidStockData);
+      setStocks(validStocks);
       setError(null);
     } catch (err) {
       setError('Failed to load stock data');
@@ -37,31 +51,47 @@ export default function StockTicker() {
   };
 
   useEffect(() => {
-    fetchStockData();
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchStockData, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  if (isLoading) {
-    return <div className={styles.loading}>Loading stocks...</div>;
-  }
-
-  if (error) {
-    return <div className={styles.error}>{error}</div>;
-  }
+    if (selectedTickers.length > 0) {
+      fetchStockData();
+      // Refresh every 30 seconds
+      const interval = setInterval(fetchStockData, 30000);
+      return () => clearInterval(interval);
+    } else {
+      setStocks([]);
+      setIsLoading(false);
+    }
+  }, [selectedTickers]);
 
   return (
-    <div className={styles.tickerGrid}>
-      {stocks.map((stock) => (
-        <div key={stock.symbol} className={styles.tickerCard}>
-          <div className={styles.symbol}>{stock.symbol}</div>
-          <div className={styles.price}>${stock.price.toFixed(2)}</div>
-          <div className={`${styles.change} ${stock.change >= 0 ? styles.positive : styles.negative}`}>
-            {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(2)} ({stock.changePercent.toFixed(2)}%)
-          </div>
+    <div className={styles.container}>
+      {/* <h2 className={styles.title}>Stock Tickers</h2> */}
+      <StockTickerInput
+        onTickersChange={setSelectedTickers}
+        maxTickers={20}
+        initialTickers={selectedTickers}
+      />
+      
+      {isLoading && selectedTickers.length > 0 ? (
+        <div className={styles.loading}>Loading stocks...</div>
+      ) : error ? (
+        <div className={styles.error}>{error}</div>
+      ) : stocks.length > 0 ? (
+        <div className={styles.tickerGrid}>
+          {stocks.map((stock) => (
+            <div key={stock.symbol} className={styles.tickerCard}>
+              <div className={styles.symbol}>{stock.symbol}</div>
+              <div className={styles.price}>${stock.price.toFixed(2)}</div>
+              <div className={`${styles.change} ${stock.change >= 0 ? styles.positive : styles.negative}`}>
+                {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(2)} ({stock.changePercent.toFixed(2)}%)
+              </div>
+            </div>
+          ))}
         </div>
-      ))}
+      ) : (
+        <div className={styles.emptyState}>
+          Add stock tickers to see their prices
+        </div>
+      )}
     </div>
   );
 } 
