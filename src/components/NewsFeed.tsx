@@ -36,7 +36,6 @@ const PAGE_RELOAD_MS = 100;
 export default function NewsFeed() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [category, setCategory] = useState('general');
-  const [loading, setLoading] = useState(true);
   const [showLoading, setShowLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,7 +48,6 @@ export default function NewsFeed() {
   const fetchNews = async (selectedCategory: string) => {
     const startTime = Date.now();
     try {
-      setLoading(true);
       setShowLoading(true);
       setError(null);
       const response = await fetch(`/api/news?category=${selectedCategory}&pageSize=${ARTICLES_PER_PAGE}`);
@@ -60,7 +58,7 @@ export default function NewsFeed() {
       const fetchTime = Date.now() - startTime;
       const remainingTime = Math.max(0, PAGE_RELOAD_MS - fetchTime);
       
-      // Wait for the remaining time if fetch was faster than 250ms
+      // Wait for the remaining time if fetch was faster than PAGE_RELOAD_MS
       if (remainingTime > 0) {
         await new Promise(resolve => setTimeout(resolve, remainingTime));
       }
@@ -70,7 +68,6 @@ export default function NewsFeed() {
       setError('Failed to load news articles');
       console.error(err);
     } finally {
-      setLoading(false);
       // Add a small delay before hiding the loading state to prevent flicker
       setTimeout(() => setShowLoading(false), 50);
     }
