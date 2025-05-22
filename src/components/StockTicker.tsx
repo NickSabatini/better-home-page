@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import styles from './StockTicker.module.css';
 import StockTickerInput from './StockTickerInput';
+import useLocalStorage from '@/hooks/useLocalStorage';
 
 interface StockData {
   symbol: string;
@@ -31,7 +32,7 @@ export default function StockTicker() {
   const [stocks, setStocks] = useState<StockData[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedTickers, setSelectedTickers] = useState<string[]>(['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA']);
+  const [selectedTickers, setSelectedTickers] = useLocalStorage<string[]>('stockTickers', ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA']);
 
   const fetchStockData = async () => {
     try {
